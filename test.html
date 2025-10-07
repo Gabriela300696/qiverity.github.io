@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test IQ - QiVerity</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f6f3ee;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
+    h1 {
+      color: #8b6f43;
+      font-size: 2em;
+    }
+    .question {
+      margin: 20px 0;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    button {
+      background-color: #c5a66a;
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #b89152;
+    }
+  </style>
+</head>
+<body>
+  <h1>Testul tău de IQ - QiVerity</h1>
+
+  <form id="iqTest">
+    <div class="question">
+      <p><strong>1.</strong> Dacă toate trandafirile sunt flori și unele flori se ofilesc repede, ce putem deduce?</p>
+      <label><input type="radio" name="q1" value="0"> Toate trandafirile se ofilesc repede</label><br>
+      <label><input type="radio" name="q1" value="1"> Unele trandafirile se pot ofili repede</label><br>
+      <label><input type="radio" name="q1" value="0"> Niciun trandafir nu se ofilește repede</label>
+    </div>
+
+    <div class="question">
+      <p><strong>2.</strong> Ce număr urmează în șirul: 2, 6, 12, 20, ?</p>
+      <label><input type="radio" name="q2" value="0"> 24</label><br>
+      <label><input type="radio" name="q2" value="1"> 30</label><br>
+      <label><input type="radio" name="q2" value="0"> 28</label>
+    </div>
+
+    <div class="question">
+      <p><strong>3.</strong> Găsește cuvântul diferit: pisică, câine, lup, vultur</p>
+      <label><input type="radio" name="q3" value="0"> pisică</label><br>
+      <label><input type="radio" name="q3" value="0"> câine</label><br>
+      <label><input type="radio" name="q3" value="0"> lup</label><br>
+      <label><input type="radio" name="q3" value="1"> vultur</label>
+    </div>
+
+    <button type="button" onclick="calculateScore()">Trimite răspunsurile</button>
+  </form>
+
+  <h2 id="result"></h2>
+
+  <script>
+    function calculateScore() {
+      let score = 0;
+      const answers = document.querySelectorAll('input[type=radio]:checked');
+      answers.forEach(a => score += parseInt(a.value));
+
+      const result = document.getElementById('result');
+      if (answers.length < 3) {
+        result.innerText = "Răspunde la toate întrebările înainte de a trimite!";
+        result.style.color = "red";
+      } else {
+        let iq = 80 + score * 20;
+        result.innerHTML = `Scorul tău estimativ de IQ este: <strong>${iq}</strong>`;
+        result.style.color = "#8b6f43";
+      }
+    }
+  </script>
+</body>
+</html>
