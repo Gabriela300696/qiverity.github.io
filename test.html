@@ -1,94 +1,334 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Test IQ - QiVerity</title>
-  <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #f6f3ee;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 30px;
-    }
-    h1 {
-      color: #8b6f43;
-      font-size: 2em;
-    }
-    .question {
-      margin: 20px 0;
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      width: 100%;
-      max-width: 600px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    button {
-      background-color: #c5a66a;
-      border: none;
-      color: white;
-      padding: 12px 24px;
-      font-size: 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    button:hover {
-      background-color: #b89152;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Test IQ — QiVerity</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  :root{--bg:#f6f3ee;--card:#fff;--accent:#C8A548;--accent-dark:#AF913F;--muted:#666;}
+  body{font-family:'Poppins',sans-serif;background:var(--bg);margin:0;padding:24px;display:flex;justify-content:center}
+  .wrap{max-width:900px;width:100%;}
+  header{display:flex;flex-direction:column;align-items:center;margin-bottom:18px}
+  h1{margin:8px 0;color:#2c2c2c}
+  p.lead{color:var(--muted);max-width:760px;text-align:center}
+  .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 24px rgba(13,16,48,0.06)}
+  .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .timer{font-weight:700;color:var(--accent)}
+  .question{margin:14px 0;padding:14px;border-radius:10px;border:1px solid #f0ece6}
+  .opts label{display:block;margin:6px 0;cursor:pointer}
+  button.primary{background:var(--accent);color:#fff;border:none;padding:12px 18px;border-radius:10px;font-weight:600;cursor:pointer}
+  button.secondary{background:#f4f2ee;border:1px solid #e9e6df;padding:10px 14px;border-radius:8px;cursor:pointer}
+  #resultBox{margin-top:16px;padding:14px;border-radius:10px;background:#fbfbff;display:none}
+  .payButtons a{display:inline-block;margin:6px 6px;padding:10px 14px;border-radius:10px;text-decoration:none;color:#fff}
+  .paySmall{font-size:13px;color:var(--muted);margin-top:8px}
+  .hidden{display:none}
+  footer{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
+</style>
 </head>
 <body>
-  <h1>Testul tău de IQ - QiVerity</h1>
+  <div class="wrap">
+    <header>
+      <h1>Test de Inteligență — QiVerity</h1>
+      <p class="lead">25 de întrebări. Timp: <strong>25 minute</strong>. Răspunde sincer — rezultatul este estimativ și orientativ.</p>
+    </header>
 
-  <form id="iqTest">
-    <div class="question">
-      <p><strong>1.</strong> Dacă toate trandafirile sunt flori și unele flori se ofilesc repede, ce putem deduce?</p>
-      <label><input type="radio" name="q1" value="0"> Toate trandafirile se ofilesc repede</label><br>
-      <label><input type="radio" name="q1" value="1"> Unele trandafirile se pot ofili repede</label><br>
-      <label><input type="radio" name="q1" value="0"> Niciun trandafir nu se ofilește repede</label>
+    <div class="card">
+      <div class="meta">
+        <div><strong>Întrebări:</strong> <span id="qTotal">25</span></div>
+        <div class="timer">Timp rămas: <span id="timer">25:00</span></div>
+      </div>
+
+      <form id="quizForm">
+        <!-- Intrebările vor fi injectate aici de script -->
+        <div id="questions"></div>
+
+        <div style="display:flex;gap:8px;align-items:center;margin-top:12px">
+          <button type="button" class="primary" id="submitBtn">Trimite testul</button>
+          <button type="button" class="secondary" id="saveProgress">Salvează progres (local)</button>
+          <div style="margin-left:auto;color:var(--muted)">Ai <strong id="remaining">25</strong> întrebări necompletate</div>
+        </div>
+      </form>
+
+      <div id="resultBox">
+        <h3 id="resultTitle"></h3>
+        <div id="resultText"></div>
+
+        <div id="paymentArea" class="hidden" style="margin-top:12px">
+          <p style="margin:6px 0">Alege o opțiune pentru a obține diploma și accesul la teste:</p>
+          <div class="payButtons">
+            <!-- Înlocuiește href-urile cu linkurile PayPal create în contul tău -->
+            <a id="pay1" href="#" style="background:#6b7280">0,99 € — Rezultat + diplomă standard</a>
+            <a id="pay2" href="#" style="background:#1f93ff">2,99 € — Acces 2 săptămâni + diplomă standard</a>
+            <a id="pay3" href="#" style="background:#0b8f4e">4,99 € — Acces 1 lună + diplomă premium</a>
+          </div>
+          <div class="paySmall">După plată: poți descărca diploma. Pentru trimitere automată pe email vezi opțiunile mai jos.</div>
+
+          <div style="margin-top:12px;">
+            <button id="iPaid" class="secondary">Am plătit — verifică & descarcă diploma</button>
+            <span style="margin-left:10px;color:var(--muted)">sau</span>
+            <button id="downloadNow" class="primary hidden">Descarcă diploma</button>
+          </div>
+
+        </div>
+      </div>
+
     </div>
 
-    <div class="question">
-      <p><strong>2.</strong> Ce număr urmează în șirul: 2, 6, 12, 20, ?</p>
-      <label><input type="radio" name="q2" value="0"> 24</label><br>
-      <label><input type="radio" name="q2" value="1"> 30</label><br>
-      <label><input type="radio" name="q2" value="0"> 28</label>
-    </div>
+    <footer>Notă: Acest test este orientativ. Pentru evaluări clinice, consultă un psiholog autorizat.</footer>
+  </div>
 
-    <div class="question">
-      <p><strong>3.</strong> Găsește cuvântul diferit: pisică, câine, lup, vultur</p>
-      <label><input type="radio" name="q3" value="0"> pisică</label><br>
-      <label><input type="radio" name="q3" value="0"> câine</label><br>
-      <label><input type="radio" name="q3" value="0"> lup</label><br>
-      <label><input type="radio" name="q3" value="1"> vultur</label>
-    </div>
+<script>
+/* -------------- Date (întrebări) -------------- */
+/* Fiecare obiect: {q: 'enunt', opts: ['a','b','c','d'], a: indexCorect, type: 'mc'|'visual' } */
+const questionsData = [
+  {q:"1. Ce număr urmează în șirul: 3, 6, 12, 24, ?", opts:["30","36","48","60"], a:2},
+  {q:"2. Dacă toate X sunt Y, și unele Y sunt Z, ce este corect?", opts:["Toate X sunt Z","Unele X pot fi Z","Nimic din cele de mai sus"], a:1},
+  {q:"3. Alege elementul diferit: măr, para, banană, brad", opts:["măr","para","banană","brad"], a:3},
+  {q:"4. 7 + 6 × 2 = ?", opts:["26","20","32","19"], a:1},
+  {q:"5. Completați seria: 2, 5, 10, 17, 26, ?", opts:["35","37","34","33"], a:0},
+  {q:"6. Care cuvânt are sens opus pentru 'răbdare'?", opts:["toleranță","nerăbdare","calm","pace"], a:1},
+  {q:"7. Dacă A=1, B=2, C=3,... ce valoare are CAT?", opts:["24","22","26","30"], a:0},
+  {q:"8. Găsește analogia: MÂNCARE : HÂRTIE = MIȘCARE : ?", opts:["TABLA","TRICOU","MASĂ","PÂINE"], a:2},
+  {q:"9. Dacă azi este joi, în 100 de zile va fi...", opts:["luni","miercuri","sâmbătă","marți"], a:2},
+  {q:"10. 9×9 - 9 = ?", opts:["72","72","72","72"], a:0}, // intenționat simplu
+  {q:"11. Găsește litera care urmează: D, G, K, P, ?", opts:["U","T","S","R"], a:0},
+  {q:"12. Ce număr completează? 1, 1, 2, 3, 5, 8, ?", opts:["11","12","13","14"], a:2},
+  {q:"13. Alege propoziția logic adevărată:", opts:["Toți copacii sunt plante","Toate plantele sunt copaci","Niciuna"], a:0},
+  {q:"14. Care din următoarele este un sinonim pentru 'esoteric'?", opts:["popular","mistic","comun","obișnuit"], a:1},
+  {q:"15. Dacă X+X=10, X*X=25, ce valoare are X?", opts:["5","-5","ambii","niciunul"], a:2},
+  {q:"16. (Vizual) Alege forma care lipsește: ◼︎ ◻︎ ◼︎ ◻︎ ?", opts:["◻︎","◼︎","▲","●"], a:0, type:"visual"},
+  {q:"17. (Vizual) Continuă modelul: ▲ ● ▲ ▲ ● ▲ ?", opts:["▲","●","■"], a:1, type:"visual"},
+  {q:"18. 5 oameni construiesc o casă în 10 zile. În cât timp 10 oameni ar construi aceeași casă?", opts:["5","10","20","8"], a:0},
+  {q:"19. Care număr este cel mai apropiat de media 10, 12, 15, 9, 7?", opts:["11","12","10","9"], a:0},
+  {q:"20. (Verbal) Ce expresie se potrivește: 'a lua taurul de coarne' = ?", opts:["a fugi","a evita","a înfrunta problema","a discuta"], a:2},
+  {q:"21. Găsește perechea: OCEAN este pentru apă precum PĂDURE este pentru ...", opts:["frunze","copaci","păsări","umbră"], a:1},
+  {q:"22. Ce număr lipseste: 4, 9, 16, 25, ?", opts:["30","36","35","34"], a:1},
+  {q:"23. (Vizual) Alege figura ce continuă secvența: ◧ ◨ ◧ ◨ ?", opts:["◧","◨","◩"], a:0, type:"visual"},
+  {q:"24. Dintre următoarele, care este o concluzie validă? 'Toți artiștii sunt creativi. Unii creativi sunt gânditori.'", opts:["Toți artiștii sunt gânditori","Unii artiști pot fi gânditori","Nimic din cele anterioare"], a:1},
+  {q:"25. (Matematic) 3^3 + 2^4 = ?", opts:["35","27","17","43"], a:3}
+];
 
-    <button type="button" onclick="calculateScore()">Trimite răspunsurile</button>
-  </form>
+let timeLeft = 25*60; // seconds
+let timerInterval;
 
-  <h2 id="result"></h2>
+/* -------------- Injectăm întrebările în HTML -------------- */
+const qDiv = document.getElementById('questions');
+document.getElementById('qTotal').innerText = questionsData.length;
+questionsData.forEach((item, idx)=>{
+  const qBox = document.createElement('div');
+  qBox.className = 'question';
+  qBox.innerHTML = `<div><strong>${idx+1}.</strong> ${item.q}</div>`;
+  const optsDiv = document.createElement('div');
+  optsDiv.className = 'opts';
+  item.opts.forEach((o,i)=>{
+    const id = `q${idx}_opt${i}`;
+    const lab = document.createElement('label');
+    lab.innerHTML = `<input type="radio" name="q${idx}" id="${id}" value="${i}"> ${o}`;
+    optsDiv.appendChild(lab);
+  });
+  qBox.appendChild(optsDiv);
+  qDiv.appendChild(qBox);
+});
 
-  <script>
-    function calculateScore() {
-      let score = 0;
-      const answers = document.querySelectorAll('input[type=radio]:checked');
-      answers.forEach(a => score += parseInt(a.value));
+/* -------------- Timer -------------- */
+function updateTimerDisplay(){
+  const m = Math.floor(timeLeft/60);
+  const s = timeLeft % 60;
+  document.getElementById('timer').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  if(timeLeft<=0){
+    clearInterval(timerInterval);
+    autoSubmit();
+  }
+}
+function startTimer(){ timerInterval = setInterval(()=>{ timeLeft--; updateTimerDisplay(); },1000); }
+updateTimerDisplay(); // initial
 
-      const result = document.getElementById('result');
-      if (answers.length < 3) {
-        result.innerText = "Răspunde la toate întrebările înainte de a trimite!";
-        result.style.color = "red";
-      } else {
-        let iq = 80 + score * 20;
-        result.innerHTML = `Scorul tău estimativ de IQ este: <strong>${iq}</strong>`;
-        result.style.color = "#8b6f43";
+/* -------------- Save / load progres local -------------- */
+document.getElementById('saveProgress').addEventListener('click', ()=>{
+  const data = new FormData(document.getElementById('quizForm'));
+  const obj = {};
+  for(const [k,v] of data.entries()) obj[k]=v;
+  localStorage.setItem('qiverity_progress', JSON.stringify({answers:obj,timeLeft}));
+  alert('Progres salvat local.');
+});
+(function loadProgress(){
+  const saved = localStorage.getItem('qiverity_progress');
+  if(saved){
+    const parsed = JSON.parse(saved);
+    if(parsed && parsed.answers){
+      for(const k in parsed.answers){
+        const val = parsed.answers[k];
+        const el = document.querySelector(`[name="${k}"][value="${val}"]`);
+        if(el) el.checked = true;
       }
+      if(parsed.timeLeft) timeLeft = parsed.timeLeft;
+      updateTimerDisplay();
     }
-  </script>
+  }
+})();
+
+/* -------------- Contorizare necompletate -------------- */
+function updateRemaining(){
+  let remaining = 0;
+  for(let i=0;i<questionsData.length;i++){
+    if(!document.querySelector(`input[name="q${i}"]:checked`)) remaining++;
+  }
+  document.getElementById('remaining').innerText = remaining;
+}
+document.getElementById('quizForm').addEventListener('change', updateRemaining);
+updateRemaining();
+
+/* -------------- Submit & Scoring -------------- */
+function calculateScore(){
+  let correct = 0;
+  for(let i=0;i<questionsData.length;i++){
+    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+    if(sel && parseInt(sel.value) === questionsData[i].a) correct++;
+  }
+  return correct;
+}
+
+function scoreToIQ(correct){
+  // map 0..25 -> IQ 70..140 approx
+  const iq = Math.round(70 + (correct/25)*70);
+  return iq;
+}
+
+function showResult(correct){
+  const iq = scoreToIQ(correct);
+  const box = document.getElementById('resultBox');
+  document.getElementById('resultTitle').innerText = `Ai răspuns corect la ${correct} din ${questionsData.length} întrebări.`;
+  const interp = iqInterpretation(iq);
+  document.getElementById('resultText').innerHTML = `<p>Estimare IQ: <strong>${iq}</strong></p><p>${interp}</p>`;
+  box.style.display='block';
+  document.getElementById('paymentArea').classList.remove('hidden');
+  // enable manual download button after "paid" or direct
+  // show downloadNow only after we confirm payment (see below)
+}
+
+function iqInterpretation(iq){
+  if(iq < 90) return "Rezultat sub medie; folosește-l ca referință orientativă.";
+  if(iq < 110) return "Interval mediu — abilitățile tale cognitive sunt în linie cu majoritatea populației.";
+  if(iq < 125) return "Peste medie — ai abilități cognitive superioare.";
+  if(iq < 140) return "Foarte peste medie — gândire bună și raționament puternic.";
+  return "Scor excepțional — potențial deosebit.";
+}
+
+/* Trigger automat la epuizare timp */
+function autoSubmit(){ 
+  alert('Timpul alocat s-a încheiat. Se vor folosi răspunsurile completate.');
+  submitHandler();
+}
+
+/* -------------- Submit handler -------------- */
+function submitHandler(){
+  clearInterval(timerInterval);
+  const correct = calculateScore();
+  showResult(correct);
+  // show pay buttons (links are placeholders)
+  // start tracking result in sessionStorage for diploma generation
+  sessionStorage.setItem('qiverity_last_result', JSON.stringify({correct, iq: scoreToIQ(correct)}));
+}
+
+/* attach */
+document.getElementById('submitBtn').addEventListener('click', function(){
+  // check if any unanswered
+  let unanswered = 0;
+  for(let i=0;i<questionsData.length;i++){
+    if(!document.querySelector(`input[name="q${i}"]:checked`)) unanswered++;
+  }
+  if(unanswered>0){
+    if(!confirm(`Mai sunt ${unanswered} întrebări necompletate. Vrei să trimiți oricum?`)) return;
+  }
+  submitHandler();
+});
+
+/* start timer după ce utilizator interacționează prima dată (prevent autoplay) */
+let started = false;
+document.addEventListener('click', function startOnce(){
+  if(!started){
+    startTimer();
+    started = true;
+    document.removeEventListener('click', startOnce);
+  }
+});
+
+/* -------------- PDF Diploma (jsPDF) -------------- */
+async function generateDiploma(name, scoreObj, premium=false){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'a4'});
+  // background
+  doc.setFillColor(245,241,234);
+  doc.rect(0,0,595,842,'F');
+  doc.setFontSize(26);
+  doc.setTextColor(60,40,20);
+  doc.text("QiVerity", 40, 80);
+  doc.setFontSize(18);
+  doc.text("Certificat de absolvire", 40, 120);
+  doc.setFontSize(14);
+  const text = `Se certifică că ${name || 'Participant'} a finalizat testul QiVerity.\nScor IQ estimativ: ${scoreObj.iq} (corecte: ${scoreObj.correct}).\nTip diplomă: ${premium ? 'Premium' : 'Standard'}.`;
+  doc.setFontSize(12);
+  doc.text(doc.splitTextToSize(text, 500), 40, 160);
+  doc.setFontSize(11);
+  doc.text("Data: " + new Date().toLocaleDateString(), 40, 260);
+  // footer
+  doc.setFontSize(10);
+  doc.text("QiVerity — evaluare orientativă. Pentru evaluări clinice, contactați un specialist.", 40, 800);
+  return doc.output('blob'); // return Blob
+}
+
+/* -------------- PayPal / Plata - butoane si flow simplu -------------- */
+/* NOTE: Trebuie sa creezi in PayPal Payment Links pentru cele 3 produse si sa pui URL-urile aici */
+const pay1 = document.getElementById('pay1'); // 0.99
+const pay2 = document.getElementById('pay2'); // 2.99
+const pay3 = document.getElementById('pay3'); // 4.99
+
+// *** IMPORTANT *** : inlocuieste '#' cu linkurile tale PayPal Payment Link
+pay1.href = "#"; 
+pay2.href = "#";
+pay3.href = "#";
+
+// Cand clientul plaseaza plata, PayPal poate redirectiona catre un URL 'return' - fara server nu putem verifica automat.
+// Varianta usoara: dupa plata clientul revine si apasa "Am plătit" si tu VALIDezi tranzactia manual sau folosesti Zapier/Make.
+document.getElementById('iPaid').addEventListener('click', async ()=>{
+  // verificare manuala: cerem userului sa introduca email si, optional, ID tranzactie
+  const email = prompt("Introdu e-mailul folosit la plată (pentru confirmare și trimiterea diplomei):");
+  if(!email){ alert('E-mail necesar.'); return; }
+  // In realitate: ar trebui sa verificam plata automat (PayPal Webhook). Vom oferi diploma imediat ca dovada de concept.
+  const last = JSON.parse(sessionStorage.getItem('qiverity_last_result')||'{}');
+  if(!last){ alert('Nu exista rezultat salvat.'); return; }
+  // generare diploma si descarcare
+  const blob = await generateDiploma(email, last, /*premium=*/false);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Diploma_QiVerity_${email.replace(/[^a-z0-9]/gi,'_')}.pdf`;
+  a.click();
+  URL.revokeObjectURL(url);
+  alert('Diploma generata. Pentru trimitere automata pe email vezi optiunile din documentatia proiectului.');
+});
+
+/* De asemenea oferim descarcare imediata (fara plata) doar pentru test - poti ascunde butonul in productie */
+document.getElementById('downloadNow').addEventListener('click', async ()=>{
+  const name = prompt('Introdu numele pentru diplomei (ex: Ion Popescu):');
+  if(!name) return;
+  const last = JSON.parse(sessionStorage.getItem('qiverity_last_result')||'{}');
+  const blob = await generateDiploma(name, last, /*premium=*/true);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Diploma_QiVerity_${name.replace(/[^a-z0-9]/gi,'_')}.pdf`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* -------------- Helper pentru debug: afiseaza buton descarcare daca vrei -------------- */
+// Pentru testare locala poti dezactiva cerinta de plata, afisand butonul de descarcare:
+document.getElementById('downloadNow').classList.remove('hidden'); // sterge / comenteaza in productie
+
+</script>
 </body>
 </html>
